@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>A.R.I.A</title>
+<meta name="description" content="Adaptive Responsive Intelligence Assistant"/>
+<meta name="theme-color" content="#00d4ff"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ARIA"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --arc: #00d4ff;
+  --arc-dim: #0088aa;
+  --arc-glow: #00d4ff44;
+  --gold: #ffc947;
+  --gold-glow: #ffc94744;
+  --bg: #03080f;
+  --panel: #060e1a;
+  --panel2: #0a1628;
+  --text: #cde8ff;
+  --text-dim: rgba(205,232,255,0.5);
+  --danger: #ff4466;
+  --green: #00ff9f;
+  --nav-h: 64px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; overflow:hidden; }
+body {
+  background: var(--bg);
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grid BG */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image: linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Scanline */
+.scanline {
+  position:fixed; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg,transparent,var(--arc),transparent);
+  opacity:0.2; animation:scan 8s linear infinite; pointer-events:none; z-index:100;
+}
+@keyframes scan { from{top:-2px} to{top:100vh} }
+
+/* Corner accents */
+.corner { position:fixed; width:50px; height:50px; z-index:1; pointer-events:none; }
+.corner.tl { top:0;left:0; border-top:1px solid var(--arc); border-left:1px solid var(--arc); }
+.corner.tr { top:0;right:0; border-top:1px solid var(--arc); border-right:1px solid var(--arc); }
+
+/* Header */
+.header {
+  position:relative; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid rgba(0,212,255,0.15);
+  background: rgba(3,8,15,0.95);
+  backdrop-filter: blur(10px);
+  flex-shrink:0;
+}
+.logo {
+  font-family:'Orbitron',sans-serif; font-size:1.2rem; font-weight:900;
+  letter-spacing:0.25em; color:var(--arc);
+  text-shadow: 0 0 15px var(--arc-glow);
+}
+.header-right { display:flex; gap:8px; align-items:center; }
+.time-display {
+  font-family:'Orbitron',sans-serif; font-size:0.6rem;
+  letter-spacing:0.15em; color:var(--arc-dim);
+}
+
+/* Main content */
+.main-content {
+  flex:1; overflow:hidden; position:relative; z-index:2;
+}
+
+/* Sections */
+.section {
+  position:absolute; inset:0;
+  overflow-y:auto; overflow-x:hidden;
+  padding-bottom: calc(var(--nav-h) + 10px);
+  display:none;
+  scrollbar-width:thin; scrollbar-color:var(--arc-dim) transparent;
+}
+.section::-webkit-scrollbar { width:3px; }
+.section::-webkit-scrollbar-thumb { background:var(--arc-dim); }
+.section.active { display:block; }
+
+/* Bottom Nav */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0;
+  height:var(--nav-h);
+  background: rgba(3,8,15,0.97);
+  border-top: 1px solid rgba(0,212,255,0.2);
+  display:flex; align-items:center; justify-content:space-around;
+  z-index:50; backdrop-filter:blur(20px);
+}
+.nav-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  gap:2px; padding:8px 4px; cursor:pointer;
+  transition:all 0.2s; border:none; background:transparent;
+  color:rgba(0,212,255,0.35);
+}
+.nav-btn.active { color:var(--arc); }
+.nav-btn .nav-icon { font-size:1.3rem; line-height:1; }
+.nav-btn .nav-label {
+  font-family:'Orbitron',sans-serif; font-size:0.42rem;
+  letter-spacing:0.1em; white-space:nowrap;
+}
+.nav-btn.active .nav-label { color:var(--arc); }
+
+/* ===== CHAT SECTION ===== */
+#chat-section { padding:12px 14px calc(var(--nav-h) + 10px); }
+
+.orb-wrap { display:flex; justify-content:center; margin:10px 0 8px; }
+.orb {
+  width:120px; height:120px; border-radius:50%;
+  background: radial-gradient(circle at 38% 35%,#00eeff44,#001a2a 65%);
+  border:2px solid var(--arc);
+  box-shadow:0 0 20px var(--arc-glow),inset 0 0 20px rgba(0,212,255,0.1);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:transform 0.2s,box-shadow 0.3s;
+  position:relative;
+}
+.orb::before {
+  content:''; position:absolute; inset:-10px; border-radius:50%;
+  border:1px solid rgba(0,212,255,0.15);
+  animation:orbit-ring 4s linear infinite;
+}
+@keyframes orbit-ring { to{transform:rotate(360deg)} }
+.orb.listening {
+  border-color:var(--gold);
+  box-shadow:0 0 30px rgba(255,201,71,0.5),inset 0 0 20px rgba(255,201,71,0.1);
+  animation:pulse-listen 1s ease-in-out infinite;
+}
+.orb.thinking { animation:pulse-think 0.6s ease-in-out infinite; }
+@keyframes pulse-listen { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes pulse-think { 0%,100%{box-shadow:0 0 20px var(--arc-glow)} 50%{box-shadow:0 0 50px rgba(0,212,255,0.7)} }
+.orb-icon { font-size:2.2rem; user-select:none; }
+
+.status-text {
+  font-family:'Orbitron',sans-serif; font-size:0.6rem; letter-spacing:0.15em;
+  color:var(--arc-dim); text-align:center; min-height:16px; margin-bottom:4px;
+}
+.status-text.active { color:var(--arc); }
+.status-text.listening { color:var(--gold); }
+.status-text.error { color:var(--danger); }
+
+.waveform {
+  display:flex; align-items:center; gap:3px; height:24px;
+  justify-content:center; margin-bottom:10px; opacity:0; transition:opacity 0.3s;
+}
+.waveform.active { opacity:1; }
+.wave-bar { width:3px; border-radius:2px; background:var(--arc); height:4px; }
+.waveform.listening .wave-bar { animation:wave-anim 0.8s ease-in-out infinite; background:var(--gold); }
+.wave-bar:nth-child(1){animation-delay:0s} .wave-bar:nth-child(2){animation-delay:0.1s}
+.wave-bar:nth-child(3){animation-delay:0.2s} .wave-bar:nth-child(4){animation-delay:0.3s}
+.wave-bar:nth-child(5){animation-delay:0.4s} .wave-bar:nth-child(6){animation-delay:0.3s}
+.wave-bar:nth-child(7){animation-delay:0.2s} .wave-bar:nth-child(8){animation-delay:0.1s}
+@keyframes wave-anim { 0%,100%{height:4px} 50%{height:20px} }
+
+.transcript-box {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.2);
+  padding:10px 14px; font-size:0.82rem; color:rgba(255,255,255,0.5);
+  font-style:italic; margin-bottom:10px; position:relative;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+}
+.transcript-box::before {
+  content:'VOICE INPUT'; position:absolute; top:-7px; left:10px;
+  font-family:'Orbitron',sans-serif; font-size:0.45rem; letter-spacing:0.2em;
+  color:var(--arc-dim); background:var(--panel); padding:0 5px;
+}
+
+.chat-log {
+  display:flex; flex-direction:column; gap:8px;
+  max-height:280px; overflow-y:auto; margin-bottom:10px;
+  scrollbar-width:thin; scrollbar-color:var(--arc-dim) transparent;
+}
+.msg { padding:10px 12px; font-size:0.85rem; line-height:1.6; animation:msg-in 0.3s ease-out; }
+@keyframes msg-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.msg.user {
+  background:rgba(0,212,255,0.06); border-left:2px solid var(--arc);
+  color:var(--arc); font-family:'Orbitron',sans-serif; font-size:0.7rem;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
+}
+.msg.user::before { content:'▶ YOU'; display:block; font-size:0.45rem; letter-spacing:0.2em; color:var(--arc-dim); margin-bottom:4px; }
+.msg.aria {
+  background:rgba(255,201,71,0.04); border-left:2px solid var(--gold); color:var(--text);
+  clip-path:polygon(0 0,100% 0,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+.msg.aria::before { content:'⬡ ARIA'; display:block; font-family:'Orbitron',sans-serif; font-size:0.45rem; letter-spacing:0.2em; color:var(--gold); margin-bottom:4px; }
+
+.typing { display:flex; gap:5px; align-items:center; padding:10px 12px; background:rgba(255,201,71,0.04); border-left:2px solid var(--gold); }
+.typing-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); animation:dot-bounce 1s ease-in-out infinite; }
+.typing-dot:nth-child(2){animation-delay:0.15s} .typing-dot:nth-child(3){animation-delay:0.3s}
+@keyframes dot-bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+.input-row { display:flex; gap:8px; }
+.cmd-input {
+  flex:1; background:var(--panel); border:1px solid rgba(0,212,255,0.25);
+  color:var(--arc); font-family:'Rajdhani',sans-serif; font-size:0.9rem;
+  padding:10px 12px; outline:none;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
+}
+.cmd-input::placeholder { color:rgba(0,212,255,0.3); }
+.btn {
+  background:transparent; border:1px solid var(--arc); color:var(--arc);
+  font-family:'Orbitron',sans-serif; font-size:0.55rem; letter-spacing:0.1em;
+  padding:10px 12px; cursor:pointer; transition:all 0.2s;
+  clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+}
+.btn:hover { background:var(--arc); color:var(--bg); }
+.btn:disabled { opacity:0.4; cursor:not-allowed; }
+.btn-mic { border-color:var(--gold); color:var(--gold); font-size:0.95rem; }
+.btn-mic:hover { background:var(--gold); color:var(--bg); }
+.btn-mic.active { background:var(--gold); color:var(--bg); animation:mic-pulse 1s infinite; }
+@keyframes mic-pulse { 0%,100%{box-shadow:0 0 10px rgba(255,201,71,0.4)} 50%{box-shadow:0 0 25px rgba(255,201,71,0.8)} }
+
+/* ===== YOUTUBE SECTION ===== */
+#yt-section { padding:12px 14px calc(var(--nav-h) + 10px); }
+
+.section-title {
+  font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:0.2em;
+  color:var(--arc); margin-bottom:12px; display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:rgba(0,212,255,0.2); }
+
+.search-bar { display:flex; gap:8px; margin-bottom:14px; }
+.search-input {
+  flex:1; background:var(--panel); border:1px solid rgba(0,212,255,0.25);
+  color:var(--text); font-family:'Rajdhani',sans-serif; font-size:0.9rem;
+  padding:10px 12px; outline:none; border-radius:2px;
+}
+.search-input::placeholder { color:rgba(205,232,255,0.3); }
+.search-input:focus { border-color:var(--arc); }
+
+.video-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.video-card {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.1);
+  cursor:pointer; transition:border-color 0.2s, transform 0.2s;
+  border-radius:2px; overflow:hidden;
+}
+.video-card:hover { border-color:var(--arc); transform:scale(1.02); }
+.video-thumb {
+  width:100%; aspect-ratio:16/9; object-fit:cover; background:#0a1628;
+  display:block;
+}
+.video-info { padding:7px 8px; }
+.video-title { font-size:0.75rem; line-height:1.3; color:var(--text); margin-bottom:3px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.video-channel { font-size:0.65rem; color:var(--arc-dim); }
+.video-views { font-size:0.6rem; color:rgba(205,232,255,0.35); margin-top:2px; }
+
+.video-player-wrap {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95);
+  z-index:200; flex-direction:column; align-items:center; justify-content:center;
+}
+.video-player-wrap.show { display:flex; }
+.video-player-wrap iframe { width:100%; max-width:700px; aspect-ratio:16/9; border:none; }
+.close-player {
+  position:absolute; top:16px; right:16px;
+  background:var(--panel); border:1px solid var(--arc); color:var(--arc);
+  font-size:1.2rem; width:40px; height:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+
+.loading-text {
+  text-align:center; font-family:'Orbitron',sans-serif; font-size:0.65rem;
+  letter-spacing:0.2em; color:var(--arc-dim); padding:30px; animation:blink 1s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ===== NOTEPAD SECTION ===== */
+#notes-section { padding:12px 14px calc(var(--nav-h) + 10px); }
+
+.note-editor {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.2);
+  padding:12px; margin-bottom:12px; position:relative;
+}
+.note-editor textarea {
+  width:100%; min-height:120px; background:transparent; border:none;
+  color:var(--text); font-family:'Rajdhani',sans-serif; font-size:0.9rem;
+  line-height:1.6; resize:vertical; outline:none;
+}
+.note-editor textarea::placeholder { color:rgba(205,232,255,0.3); }
+.note-title-input {
+  width:100%; background:transparent; border:none; border-bottom:1px solid rgba(0,212,255,0.2);
+  color:var(--arc); font-family:'Orbitron',sans-serif; font-size:0.75rem;
+  letter-spacing:0.1em; padding:6px 0; outline:none; margin-bottom:10px;
+}
+.note-title-input::placeholder { color:rgba(0,212,255,0.3); }
+
+.note-actions { display:flex; gap:8px; flex-wrap:wrap; }
+
+.notes-list { display:flex; flex-direction:column; gap:8px; }
+.note-item {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.1);
+  padding:10px 12px; cursor:pointer; transition:border-color 0.2s;
+  position:relative;
+}
+.note-item:hover { border-color:var(--arc); }
+.note-item-title {
+  font-family:'Orbitron',sans-serif; font-size:0.65rem; color:var(--arc);
+  letter-spacing:0.1em; margin-bottom:4px;
+}
+.note-item-preview { font-size:0.8rem; color:var(--text-dim); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.note-item-date { font-size:0.6rem; color:rgba(0,212,255,0.3); margin-top:5px; }
+.note-delete {
+  position:absolute; top:8px; right:8px;
+  background:transparent; border:none; color:var(--danger);
+  font-size:0.9rem; cursor:pointer; opacity:0.6;
+}
+.note-delete:hover { opacity:1; }
+
+/* ===== MEDIA SECTION ===== */
+#media-section { padding:12px 14px calc(var(--nav-h) + 10px); }
+
+.media-tabs { display:flex; gap:8px; margin-bottom:14px; }
+.media-tab {
+  flex:1; padding:8px; text-align:center; cursor:pointer;
+  border:1px solid rgba(0,212,255,0.2); font-family:'Orbitron',sans-serif;
+  font-size:0.55rem; letter-spacing:0.1em; color:var(--arc-dim);
+  transition:all 0.2s;
+}
+.media-tab.active { border-color:var(--arc); color:var(--arc); background:rgba(0,212,255,0.08); }
+
+.upload-zone {
+  border:2px dashed rgba(0,212,255,0.3); padding:30px; text-align:center;
+  margin-bottom:14px; cursor:pointer; transition:border-color 0.2s;
+  position:relative;
+}
+.upload-zone:hover { border-color:var(--arc); }
+.upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-icon { font-size:2rem; margin-bottom:8px; }
+.upload-text { font-family:'Orbitron',sans-serif; font-size:0.6rem; letter-spacing:0.15em; color:var(--arc-dim); }
+
+/* Audio Player */
+.player-card {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.2);
+  padding:14px; margin-bottom:10px;
+}
+.player-track-name {
+  font-family:'Orbitron',sans-serif; font-size:0.7rem; letter-spacing:0.1em;
+  color:var(--arc); margin-bottom:10px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;
+}
+.player-controls { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.player-btn {
+  background:transparent; border:1px solid var(--arc); color:var(--arc);
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1rem; transition:all 0.2s; flex-shrink:0;
+}
+.player-btn:hover { background:var(--arc); color:var(--bg); }
+.player-btn.play-btn { width:44px; height:44px; font-size:1.2rem; }
+.progress-wrap { flex:1; }
+.progress-bar {
+  width:100%; height:4px; background:rgba(0,212,255,0.15);
+  border-radius:2px; cursor:pointer; margin-bottom:4px;
+}
+.progress-fill { height:100%; background:var(--arc); border-radius:2px; transition:width 0.1s; pointer-events:none; }
+.time-display-player { display:flex; justify-content:space-between; font-size:0.65rem; color:var(--arc-dim); }
+
+/* Track list */
+.track-list { display:flex; flex-direction:column; gap:6px; }
+.track-item {
+  display:flex; align-items:center; gap:10px; padding:8px 10px;
+  background:var(--panel); border:1px solid rgba(0,212,255,0.1);
+  cursor:pointer; transition:border-color 0.2s;
+}
+.track-item:hover, .track-item.playing { border-color:var(--arc); }
+.track-item.playing .track-name { color:var(--arc); }
+.track-num { font-family:'Orbitron',sans-serif; font-size:0.55rem; color:var(--arc-dim); width:16px; }
+.track-name { flex:1; font-size:0.82rem; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.track-duration { font-size:0.65rem; color:var(--arc-dim); }
+.track-delete-btn { background:transparent; border:none; color:var(--danger); font-size:0.8rem; cursor:pointer; opacity:0.5; }
+.track-delete-btn:hover { opacity:1; }
+
+/* Voice Recorder */
+.recorder-display {
+  background:var(--panel2); border:1px solid rgba(0,212,255,0.2);
+  padding:20px; text-align:center; margin-bottom:14px;
+}
+.rec-timer {
+  font-family:'Orbitron',sans-serif; font-size:2rem; color:var(--arc);
+  text-shadow:0 0 20px var(--arc-glow); margin-bottom:12px;
+}
+.rec-timer.recording { color:var(--danger); animation:rec-blink 1s infinite; }
+@keyframes rec-blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.rec-controls { display:flex; gap:12px; justify-content:center; }
+.rec-btn {
+  padding:10px 20px; border:1px solid; font-family:'Orbitron',sans-serif;
+  font-size:0.6rem; letter-spacing:0.1em; cursor:pointer; background:transparent;
+  transition:all 0.2s;
+}
+.rec-btn.start { border-color:var(--danger); color:var(--danger); }
+.rec-btn.start:hover { background:var(--danger); color:white; }
+.rec-btn.stop { border-color:var(--arc); color:var(--arc); }
+.rec-btn.stop:hover { background:var(--arc); color:var(--bg); }
+
+/* ===== WEATHER SECTION ===== */
+#weather-section { padding:12px 14px calc(var(--nav-h) + 10px); }
+
+.weather-main {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.2);
+  padding:20px; margin-bottom:12px; text-align:center; position:relative;
+  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);
+}
+.weather-city {
+  font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:0.2em;
+  color:var(--arc-dim); margin-bottom:8px;
+}
+.weather-temp {
+  font-family:'Orbitron',sans-serif; font-size:3.5rem; font-weight:900;
+  color:var(--arc); text-shadow:0 0 30px var(--arc-glow); line-height:1;
+}
+.weather-desc {
+  font-size:1rem; color:var(--text-dim); margin-top:6px; text-transform:capitalize;
+}
+.weather-icon { font-size:4rem; margin:10px 0; }
+
+.weather-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+.weather-stat {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.1);
+  padding:12px; text-align:center;
+}
+.weather-stat-label {
+  font-family:'Orbitron',sans-serif; font-size:0.5rem; letter-spacing:0.15em;
+  color:var(--arc-dim); margin-bottom:5px;
+}
+.weather-stat-value { font-size:1.1rem; font-weight:600; color:var(--text); }
+
+.forecast-list { display:flex; flex-direction:column; gap:6px; }
+.forecast-item {
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--panel); border:1px solid rgba(0,212,255,0.08);
+  padding:10px 14px;
+}
+.forecast-day { font-family:'Orbitron',sans-serif; font-size:0.6rem; letter-spacing:0.1em; color:var(--arc-dim); width:50px; }
+.forecast-icon { font-size:1.2rem; }
+.forecast-desc { flex:1; font-size:0.78rem; color:var(--text-dim); padding:0 10px; }
+.forecast-temp { font-size:0.85rem; color:var(--text); font-weight:600; }
+
+/* ===== SETTINGS SECTION ===== */
+#settings-section { padding:12px 14px calc(var(--nav-h) + 10px); }
+
+.settings-group {
+  background:var(--panel); border:1px solid rgba(0,212,255,0.15);
+  padding:16px; margin-bottom:12px;
+}
+.settings-group-title {
+  font-family:'Orbitron',sans-serif; font-size:0.6rem; letter-spacing:0.2em;
+  color:var(--arc-dim); margin-bottom:16px; border-bottom:1px solid rgba(0,212,255,0.1); padding-bottom:8px;
+}
+.dial-row { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; }
+.dial-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.dial-label { font-family:'Orbitron',sans-serif; font-size:0.55rem; letter-spacing:0.15em; color:var(--arc-dim); }
+.dial-value { font-family:'Orbitron',sans-serif; font-size:1.2rem; color:var(--arc); font-weight:700; }
+.dial-container {
+  width:90px; height:90px; position:relative; cursor:pointer; touch-action:none;
+}
+.dial-svg { width:100%; height:100%; }
+.dial-range {
+  width:100%; margin-top:5px; accent-color:var(--arc);
+  -webkit-appearance:none; height:4px; background:rgba(0,212,255,0.15); border-radius:2px; cursor:pointer;
+}
+.dial-range::-webkit-slider-thumb {
+  -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+  background:var(--arc); box-shadow:0 0 8px var(--arc-glow);
+}
+
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 0; border-bottom:1px solid rgba(0,212,255,0.08);
+}
+.setting-row:last-child { border-bottom:none; }
+.setting-name { font-size:0.85rem; color:var(--text); }
+.setting-desc { font-size:0.7rem; color:var(--text-dim); margin-top:2px; }
+.toggle {
+  width:44px; height:24px; border-radius:12px; background:rgba(0,212,255,0.15);
+  position:relative; cursor:pointer; transition:background 0.3s; border:1px solid rgba(0,212,255,0.3); flex-shrink:0;
+}
+.toggle.on { background:rgba(0,212,255,0.3); border-color:var(--arc); }
+.toggle::after {
+  content:''; position:absolute; top:3px; left:3px;
+  width:16px; height:16px; border-radius:50%; background:var(--arc-dim);
+  transition:left 0.3s, background 0.3s;
+}
+.toggle.on::after { left:23px; background:var(--arc); }
+
+.about-card {
+  background:var(--panel2); border:1px solid rgba(0,212,255,0.15);
+  padding:16px; text-align:center;
+}
+.about-logo { font-family:'Orbitron',sans-serif; font-size:1.4rem; font-weight:900; color:var(--arc); margin-bottom:4px; text-shadow:0 0 20px var(--arc-glow); }
+.about-version { font-family:'Orbitron',sans-serif; font-size:0.55rem; letter-spacing:0.2em; color:var(--arc-dim); margin-bottom:8px; }
+.about-desc { font-size:0.8rem; color:var(--text-dim); line-height:1.6; }
+
+/* Utilities */
+.empty-state { text-align:center; padding:30px; color:var(--text-dim); font-size:0.82rem; }
+.empty-icon { font-size:2.5rem; margin-bottom:8px; }
+.no-support { background:rgba(255,68,102,0.1); border:1px solid var(--danger); color:var(--danger); padding:10px; font-size:0.78rem; text-align:center; margin-bottom:10px; display:none; }
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">A.R.I.A</div>
+  <div class="header-right">
+    <div class="time-display" id="timeDisplay">--:--</div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+  <!-- CHAT -->
+  <div class="section active" id="chat-section">
+    <div class="orb-wrap">
+      <div class="orb" id="orb"><span class="orb-icon" id="orbIcon">⬡</span></div>
+    </div>
+    <div class="status-text" id="statusText">SYSTEM ONLINE — AWAITING COMMAND</div>
+    <div class="waveform" id="waveform">
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+    </div>
+    <div class="no-support" id="noSupport">⚠ Voice not supported. Use Chrome/Edge. Text works fine.</div>
+    <div class="transcript-box" id="transcriptBox">Speak or type your command...</div>
+    <div class="chat-log" id="chatLog"></div>
+    <div class="input-row">
+      <input class="cmd-input" id="cmdInput" type="text" placeholder="Type your command..."/>
+      <button class="btn btn-mic" id="micBtn">🎤</button>
+      <button class="btn" id="sendBtn">SEND</button>
+    </div>
+  </div>
+
+  <!-- YOUTUBE -->
+  <div class="section" id="yt-section">
+    <div class="section-title">📺 VIDEO FEED</div>
+    <div class="search-bar">
+      <input class="search-input" id="ytSearch" placeholder="Search YouTube..." type="text"/>
+      <button class="btn" id="ytSearchBtn">🔍</button>
+    </div>
+    <div id="ytResults">
+      <div class="video-grid" id="videoGrid"></div>
+      <div class="loading-text" id="ytLoading" style="display:none">SEARCHING...</div>
+      <div id="ytEmpty" class="empty-state"><div class="empty-icon">📺</div>Search for videos above</div>
+    </div>
+  </div>
+  <!-- Video Player Overlay -->
+  <div class="video-player-wrap" id="videoPlayer">
+    <div class="close-player" id="closePlayer">✕</div>
+    <iframe id="videoFrame" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  </div>
+
+  <!-- NOTEPAD -->
+  <div class="section" id="notes-section">
+    <div class="section-title">🗒️ NOTEPAD</div>
+    <div class="note-editor">
+      <input class="note-title-input" id="noteTitleInput" placeholder="Note title..."/>
+      <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+    </div>
+    <div class="note-actions">
+      <button class="btn" id="saveNoteBtn">💾 SAVE</button>
+      <button class="btn" id="clearNoteBtn" style="border-color:var(--gold);color:var(--gold)">✕ CLEAR</button>
+    </div>
+    <br/>
+    <div class="section-title">SAVED NOTES</div>
+    <div class="notes-list" id="notesList"></div>
+  </div>
+
+  <!-- MEDIA -->
+  <div class="section" id="media-section">
+    <div class="section-title">🎵 MEDIA PLAYER</div>
+    <div class="media-tabs">
+      <div class="media-tab active" id="tab-music" onclick="switchMediaTab('music')">🎵 MUSIC</div>
+      <div class="media-tab" id="tab-voice" onclick="switchMediaTab('voice')">🎙️ RECORDER</div>
+    </div>
+
+    <!-- Music Player -->
+    <div id="music-panel">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="audio/*" multiple/>
+        <div class="upload-icon">⬆️</div>
+        <div class="upload-text">TAP TO UPLOAD MUSIC / AUDIO</div>
+      </div>
+      <div class="player-card" id="playerCard" style="display:none">
+        <div class="player-track-name" id="playerTrackName">No track selected</div>
+        <div class="player-controls">
+          <button class="player-btn" id="prevBtn">⏮</button>
+          <button class="player-btn play-btn" id="playPauseBtn">▶</button>
+          <button class="player-btn" id="nextBtn">⏭</button>
+          <div class="progress-wrap">
+            <div class="progress-bar" id="progressBar">
+              <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <div class="time-display-player">
+              <span id="currentTime">0:00</span>
+              <span id="totalTime">0:00</span>
+            </div>
+          </div>
+          <button class="player-btn" id="shuffleBtn" title="Shuffle">🔀</button>
+        </div>
+      </div>
+      <div class="track-list" id="trackList"></div>
+    </div>
+
+    <!-- Voice Recorder -->
+    <div id="voice-panel" style="display:none">
+      <div class="recorder-display">
+        <div class="rec-timer" id="recTimer">00:00</div>
+        <div class="rec-controls">
+          <button class="rec-btn start" id="recStartBtn">⏺ RECORD</button>
+          <button class="rec-btn stop" id="recStopBtn" disabled>⏹ STOP</button>
+        </div>
+      </div>
+      <div class="section-title">RECORDINGS</div>
+      <div class="track-list" id="recList"></div>
+    </div>
+  </div>
+
+  <!-- WEATHER -->
+  <div class="section" id="weather-section">
+    <div class="section-title">🌤️ WEATHER</div>
+    <div id="weatherContent">
+      <div class="loading-text" id="weatherLoading">DETECTING LOCATION...</div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="section" id="settings-section">
+    <div class="section-title">⚙️ ARIA SETTINGS</div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">TARS PERSONALITY PARAMETERS</div>
+      <div class="dial-row">
+        <div class="dial-wrap">
+          <div class="dial-label">HONESTY</div>
+          <div class="dial-value" id="honestyVal">90%</div>
+          <input type="range" class="dial-range" id="honestyDial" min="0" max="100" value="90"/>
+          <div style="font-size:0.6rem;color:var(--arc-dim);text-align:center;max-width:90px;margin-top:4px">
+            <span id="honestyDesc">Diplomatic</span>
+          </div>
+        </div>
+        <div class="dial-wrap">
+          <div class="dial-label">HUMOR</div>
+          <div class="dial-value" id="humorVal">60%</div>
+          <input type="range" class="dial-range" id="humorDial" min="0" max="100" value="60" style="accent-color:var(--gold)"/>
+          <div style="font-size:0.6rem;color:var(--arc-dim);text-align:center;max-width:90px;margin-top:4px">
+            <span id="humorDesc">Balanced</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">SYSTEM PREFERENCES</div>
+      <div class="setting-row">
+        <div><div class="setting-name">Auto-speak responses</div><div class="setting-desc">ARIA speaks replies aloud</div></div>
+        <div class="toggle on" id="toggleSpeak" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-name">Sound effects</div><div class="setting-desc">UI interaction sounds</div></div>
+        <div class="toggle on" id="toggleSFX" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-name">Auto-detect weather</div><div class="setting-desc">Use device location</div></div>
+        <div class="toggle on" id="toggleWeather" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <div class="about-card">
+      <div class="about-logo">A.R.I.A</div>
+      <div class="about-version">VERSION 2.0 — BUILT BY VAIBHAV</div>
+      <div class="about-desc">Adaptive Responsive Intelligence Assistant<br/>Powered by Claude AI · Voice · YouTube · Notes · Music · Weather</div>
+    </div>
+  </div>
+
+</div><!-- end main-content -->
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchSection('chat')" id="nav-chat">
+    <span class="nav-icon">🤖</span>
+    <span class="nav-label">ARIA</span>
+  </button>
+  <button class="nav-btn" onclick="switchSection('yt')" id="nav-yt">
+    <span class="nav-icon">📺</span>
+    <span class="nav-label">VIDEO</span>
+  </button>
+  <button class="nav-btn" onclick="switchSection('notes')" id="nav-notes">
+    <span class="nav-icon">🗒️</span>
+    <span class="nav-label">NOTES</span>
+  </button>
+  <button class="nav-btn" onclick="switchSection('media')" id="nav-media">
+    <span class="nav-icon">🎵</span>
+    <span class="nav-label">MEDIA</span>
+  </button>
+  <button class="nav-btn" onclick="switchSection('weather')" id="nav-weather">
+    <span class="nav-icon">🌤️</span>
+    <span class="nav-label">WEATHER</span>
+  </button>
+  <button class="nav-btn" onclick="switchSection('settings')" id="nav-settings">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-label">SETTINGS</span>
+  </button>
+</nav>
+
+<audio id="ariaAudio"></audio>
+
+<script>
+// ===== NAVIGATION =====
+function switchSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(name + '-section').classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'weather') loadWeather();
+  if (name === 'notes') renderNotes();
+  if (name === 'yt' && document.getElementById('videoGrid').children.length === 0) loadDefaultVideos();
+}
+
+// ===== CLOCK =====
+function updateClock() {
+  const now = new Date();
+  document.getElementById('timeDisplay').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}
+updateClock(); setInterval(updateClock, 1000);
+
+// ===== SETTINGS DIALS =====
+const honestyDial = document.getElementById('honestyDial');
+const humorDial = document.getElementById('humorDial');
+const honestyVal = document.getElementById('honestyVal');
+const humorVal = document.getElementById('humorVal');
+const honestyDesc = document.getElementById('honestyDesc');
+const humorDesc = document.getElementById('humorDesc');
+
+function getHonestyDesc(v) {
+  if(v<=20) return 'Very Tactful'; if(v<=40) return 'Diplomatic'; if(v<=60) return 'Balanced';
+  if(v<=80) return 'Very Honest'; if(v<100) return 'Blunt'; return 'Brutally Honest';
+}
+function getHumorDesc(v) {
+  if(v<=20) return 'Very Serious'; if(v<=40) return 'Mostly Serious'; if(v<=60) return 'Balanced';
+  if(v<=80) return 'Witty'; return 'Very Funny';
+}
+honestyDial.addEventListener('input', () => {
+  honestyVal.textContent = honestyDial.value + '%';
+  honestyDesc.textContent = getHonestyDesc(parseInt(honestyDial.value));
+});
+humorDial.addEventListener('input', () => {
+  humorVal.textContent = humorDial.value + '%';
+  humorDesc.textContent = getHumorDesc(parseInt(humorDial.value));
+});
+
+// ===== CHAT / AI =====
+const orb = document.getElementById('orb');
+const orbIcon = document.getElementById('orbIcon');
+const statusText = document.getElementById('statusText');
+const waveform = document.getElementById('waveform');
+const transcriptBox = document.getElementById('transcriptBox');
+const chatLog = document.getElementById('chatLog');
+const cmdInput = document.getElementById('cmdInput');
+const micBtn = document.getElementById('micBtn');
+const sendBtn = document.getElementById('sendBtn');
+
+let recognition = null, isListening = false, isThinking = false, recognitionActive = false;
+const conversationHistory = [];
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false; recognition.interimResults = true; recognition.lang = 'en-US';
+  recognition.onstart = () => {
+    isListening = true;
+    setStatus('LISTENING...', 'listening');
+    orb.classList.add('listening'); orbIcon.textContent = '🎤';
+    waveform.classList.add('active','listening'); micBtn.classList.add('active');
+  };
+  recognition.onresult = (e) => {
+    let interim = '', final = '';
+    for(let i = e.resultIndex; i < e.results.length; i++) {
+      if(e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    transcriptBox.textContent = final || interim || '...';
+    if(final) cmdInput.value = final;
+  };
+  recognition.onend = () => {
+    isListening = false; recognitionActive = false;
+    orb.classList.remove('listening'); orbIcon.textContent = '⬡';
+    waveform.classList.remove('listening'); micBtn.classList.remove('active');
+    const val = cmdInput.value.trim();
+    if(val) sendCommand(val);
+    else { setStatus('SYSTEM ONLINE — AWAITING COMMAND',''); waveform.classList.remove('active'); }
+  };
+  recognition.onerror = (e) => {
+    isListening = false; recognitionActive = false;
+    orb.classList.remove('listening'); waveform.classList.remove('active','listening');
+    micBtn.classList.remove('active'); orbIcon.textContent = '⬡';
+    if(e.error === 'not-allowed') { setStatus('MIC BLOCKED — NEEDS HTTPS','error'); transcriptBox.textContent = '⚠ Upload to GitHub Pages for voice. Text works now!'; }
+    else if(e.error === 'no-speech') { setStatus('NO SPEECH — TRY AGAIN','error'); setTimeout(()=>setStatus('SYSTEM ONLINE — AWAITING COMMAND',''),2000); }
+    else setStatus('MIC ERROR: '+e.error.toUpperCase(),'error');
+  };
+} else { document.getElementById('noSupport').style.display='block'; }
+
+function setStatus(text,type='') { statusText.textContent=text; statusText.className='status-text '+type; }
+
+function startListening() {
+  if(!recognition) return;
+  if(isListening||recognitionActive) { try{recognition.stop()}catch(e){} return; }
+  cmdInput.value=''; transcriptBox.textContent='Listening...';
+  try { recognitionActive=true; recognition.start(); } catch(e) { recognitionActive=false; isListening=false; setStatus('MIC ERROR — TRY AGAIN','error'); }
+}
+orb.addEventListener('click', startListening);
+micBtn.addEventListener('click', startListening);
+
+function speak(text) {
+  if(!window.speechSynthesis || !document.getElementById('toggleSpeak').classList.contains('on')) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate=0.95; utter.pitch=0.85; utter.volume=0.9;
+  const voices = speechSynthesis.getVoices();
+  const pref = voices.find(v=>v.lang==='en-GB'||v.name.toLowerCase().includes('daniel')||v.name.toLowerCase().includes('google uk'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
+  if(pref) utter.voice=pref;
+  utter.onstart=()=>{orbIcon.textContent='🔊'; orb.classList.add('thinking'); waveform.classList.add('active');};
+  utter.onend=()=>{orbIcon.textContent='⬡'; orb.classList.remove('thinking'); waveform.classList.remove('active'); setStatus('SYSTEM ONLINE — AWAITING COMMAND','');};
+  speechSynthesis.speak(utter);
+}
+if(window.speechSynthesis) { speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged',()=>speechSynthesis.getVoices()); }
+
+function addMessage(role,text) {
+  const div = document.createElement('div'); div.className='msg '+role; div.textContent=text;
+  chatLog.appendChild(div); chatLog.scrollTop=chatLog.scrollHeight;
+}
+function addTyping() {
+  const div=document.createElement('div'); div.className='typing'; div.id='typingIndicator';
+  div.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  chatLog.appendChild(div); chatLog.scrollTop=chatLog.scrollHeight;
+}
+function removeTyping() { const t=document.getElementById('typingIndicator'); if(t)t.remove(); }
+
+function buildSystemPrompt() {
+  const h = parseInt(honestyDial.value);
+  const hu = parseInt(humorDial.value);
+  return `You are ARIA (Adaptive Responsive Intelligence Assistant), a highly advanced personal AI. Your honesty is set to ${h}% and humor to ${hu}%.
+${h>=80?'Be very direct and blunt — say exactly what you think without softening.':h<=40?'Be diplomatic and tactful — soften harsh truths gently.':'Be honest but considerate.'}
+${hu>=70?'Be witty and funny — use humor naturally in responses.':hu<=30?'Be serious and professional — minimal jokes.':'Balance professionalism with occasional wit.'}
+Keep responses concise for voice output. No markdown or bullet points. Speak naturally as if talking directly to Vaibhav.`;
+}
+
+async function sendCommand(text) {
+  if(!text||isThinking) return;
+  isThinking=true; cmdInput.value=''; transcriptBox.textContent=text;
+  addMessage('user',text); addTyping();
+  setStatus('PROCESSING...','active'); orb.classList.add('thinking'); orbIcon.textContent='⚙';
+  waveform.classList.add('active'); sendBtn.disabled=true;
+  conversationHistory.push({role:'user',content:text});
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSystemPrompt(),messages:conversationHistory})
+    });
+    const data = await res.json(); removeTyping();
+    if(data.content&&data.content[0]) {
+      const reply=data.content[0].text;
+      conversationHistory.push({role:'assistant',content:reply});
+      addMessage('aria',reply); setStatus('RESPONDING','active');
+      orb.classList.remove('thinking'); speak(reply);
+    } else throw new Error(data.error?.message||'Unknown error');
+  } catch(err) {
+    removeTyping(); orb.classList.remove('thinking'); waveform.classList.remove('active');
+    const msg='Apologies, encountered an error: '+err.message;
+    addMessage('aria',msg); setStatus('ERROR — RETRY','error'); orbIcon.textContent='⬡'; speak(msg);
+  }
+  isThinking=false; sendBtn.disabled=false;
+}
+sendBtn.addEventListener('click',()=>{ const v=cmdInput.value.trim(); if(v)sendCommand(v); });
+cmdInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){const v=cmdInput.value.trim(); if(v)sendCommand(v);} });
+setTimeout(()=>{ const w="Good day. I am ARIA — your Adaptive Responsive Intelligence Assistant. All systems online. How may I assist you today?"; addMessage('aria',w); speak(w); },800);
+
+// ===== YOUTUBE =====
+const INVIDIOUS_INSTANCES = ['https://inv.nadeko.net','https://invidious.fdn.fr','https://invidious.nerdvpn.de'];
+let invidiousIdx = 0;
+
+async function searchYouTube(query) {
+  const grid = document.getElementById('videoGrid');
+  const loading = document.getElementById('ytLoading');
+  const empty = document.getElementById('ytEmpty');
+  grid.innerHTML=''; loading.style.display='block'; empty.style.display='none';
+
+  for(let attempt=0; attempt<INVIDIOUS_INSTANCES.length; attempt++) {
+    const instance = INVIDIOUS_INSTANCES[(invidiousIdx+attempt)%INVIDIOUS_INSTANCES.length];
+    try {
+      const res = await fetch(`${instance}/api/v1/search?q=${encodeURIComponent(query)}&type=video&fields=videoId,title,author,viewCount,videoThumbnails`, {signal:AbortSignal.timeout(6000)});
+      if(!res.ok) continue;
+      const data = await res.json();
+      loading.style.display='none';
+      if(!data||data.length===0) { empty.style.display='block'; return; }
+      data.slice(0,12).forEach(v => {
+        const thumb = v.videoThumbnails?.find(t=>t.quality==='medium')||v.videoThumbnails?.[0];
+        const card = document.createElement('div');
+        card.className='video-card';
+        card.innerHTML=`<img class="video-thumb" src="${thumb?.url||''}" onerror="this.style.background='#0a1628'" loading="lazy"/>
+          <div class="video-info">
+            <div class="video-title">${escHtml(v.title||'')}</div>
+            <div class="video-channel">${escHtml(v.author||'')}</div>
+            <div class="video-views">${formatViews(v.viewCount)}</div>
+          </div>`;
+        card.addEventListener('click',()=>playVideo(v.videoId,v.title));
+        grid.appendChild(card);
+      });
+      invidiousIdx=(invidiousIdx+attempt)%INVIDIOUS_INSTANCES.length;
+      return;
+    } catch(e) { continue; }
+  }
+  loading.style.display='none';
+  grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div>Could not load videos. Check internet connection.</div>';
+}
+
+function loadDefaultVideos() { searchYouTube('trending music 2025'); }
+
+function playVideo(id,title) {
+  document.getElementById('videoFrame').src=`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+  document.getElementById('videoPlayer').classList.add('show');
+}
+document.getElementById('closePlayer').addEventListener('click',()=>{
+  document.getElementById('videoPlayer').classList.remove('show');
+  document.getElementById('videoFrame').src='';
+});
+
+document.getElementById('ytSearchBtn').addEventListener('click',()=>{
+  const q=document.getElementById('ytSearch').value.trim();
+  if(q) searchYouTube(q);
+});
+document.getElementById('ytSearch').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const q=e.target.value.trim(); if(q)searchYouTube(q);}
+});
+
+function formatViews(n) {
+  if(!n) return '';
+  if(n>=1e9) return (n/1e9).toFixed(1)+'B views';
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M views';
+  if(n>=1e3) return (n/1e3).toFixed(0)+'K views';
+  return n+' views';
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ===== NOTES =====
+function getNotes() { try{return JSON.parse(localStorage.getItem('aria_notes')||'[]')}catch(e){return[]} }
+function saveNotes(n) { localStorage.setItem('aria_notes',JSON.stringify(n)); }
+
+function renderNotes() {
+  const notes=getNotes(); const list=document.getElementById('notesList');
+  list.innerHTML='';
+  if(notes.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">🗒️</div>No saved notes yet</div>'; return;}
+  notes.slice().reverse().forEach((note,i)=>{
+    const idx=notes.length-1-i;
+    const div=document.createElement('div'); div.className='note-item';
+    div.innerHTML=`<div class="note-item-title">${escHtml(note.title||'Untitled')}</div>
+      <div class="note-item-preview">${escHtml(note.content||'')}</div>
+      <div class="note-item-date">${new Date(note.date).toLocaleString()}</div>
+      <button class="note-delete" onclick="deleteNote(${idx});event.stopPropagation()">🗑</button>`;
+    div.addEventListener('click',()=>loadNote(note));
+    list.appendChild(div);
+  });
+}
+
+function loadNote(note) {
+  document.getElementById('noteTitleInput').value=note.title||'';
+  document.getElementById('noteContent').value=note.content||'';
+}
+function deleteNote(idx) {
+  const notes=getNotes(); notes.splice(idx,1); saveNotes(notes); renderNotes();
+}
+
+document.getElementById('saveNoteBtn').addEventListener('click',()=>{
+  const title=document.getElementById('noteTitleInput').value.trim()||'Note '+new Date().toLocaleDateString();
+  const content=document.getElementById('noteContent').value.trim();
+  if(!content){alert('Write something first!');return;}
+  const notes=getNotes();
+  notes.push({title,content,date:Date.now()});
+  saveNotes(notes); renderNotes();
+  document.getElementById('noteTitleInput').value=''; document.getElementById('noteContent').value='';
+});
+document.getElementById('clearNoteBtn').addEventListener('click',()=>{
+  document.getElementById('noteTitleInput').value=''; document.getElementById('noteContent').value='';
+});
+
+// ===== MEDIA PLAYER =====
+const audio = document.getElementById('ariaAudio');
+let tracks = [], currentTrack = -1, isPlaying = false, shuffleOn = false;
+
+function switchMediaTab(tab) {
+  document.querySelectorAll('.media-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('music-panel').style.display = tab==='music'?'block':'none';
+  document.getElementById('voice-panel').style.display = tab==='voice'?'block':'none';
+}
+
+document.getElementById('fileInput').addEventListener('change',e=>{
+  Array.from(e.target.files).forEach(file=>{
+    const url=URL.createObjectURL(file);
+    tracks.push({name:file.name.replace(/\.[^.]+$/,''),url,type:file.type});
+  });
+  renderTrackList();
+  if(currentTrack===-1&&tracks.length>0) { loadTrack(0); }
+  document.getElementById('playerCard').style.display='block';
+});
+
+function renderTrackList() {
+  const list=document.getElementById('trackList'); list.innerHTML='';
+  if(tracks.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">🎵</div>Upload music above</div>'; return;}
+  tracks.forEach((t,i)=>{
+    const div=document.createElement('div'); div.className='track-item'+(i===currentTrack?' playing':'');
+    div.innerHTML=`<div class="track-num">${i+1}</div>
+      <div class="track-name">${escHtml(t.name)}</div>
+      <button class="track-delete-btn" onclick="deleteTrack(${i});event.stopPropagation()">✕</button>`;
+    div.addEventListener('click',()=>loadTrack(i));
+    list.appendChild(div);
+  });
+}
+
+function loadTrack(i) {
+  currentTrack=i; audio.src=tracks[i].url; audio.play();
+  isPlaying=true; document.getElementById('playPauseBtn').textContent='⏸';
+  document.getElementById('playerTrackName').textContent=tracks[i].name;
+  renderTrackList(); document.getElementById('playerCard').style.display='block';
+}
+function deleteTrack(i) {
+  tracks.splice(i,1);
+  if(currentTrack>=i) currentTrack=Math.max(0,currentTrack-1);
+  if(tracks.length===0){audio.src=''; document.getElementById('playerCard').style.display='none';}
+  renderTrackList();
+}
+
+document.getElementById('playPauseBtn').addEventListener('click',()=>{
+  if(currentTrack===-1&&tracks.length>0) {loadTrack(0);return;}
+  if(isPlaying){audio.pause();document.getElementById('playPauseBtn').textContent='▶';isPlaying=false;}
+  else{audio.play();document.getElementById('playPauseBtn').textContent='⏸';isPlaying=true;}
+});
+document.getElementById('prevBtn').addEventListener('click',()=>{
+  if(tracks.length===0)return;
+  loadTrack((currentTrack-1+tracks.length)%tracks.length);
+});
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  if(tracks.length===0)return;
+  const next=shuffleOn?Math.floor(Math.random()*tracks.length):(currentTrack+1)%tracks.length;
+  loadTrack(next);
+});
+document.getElementById('shuffleBtn').addEventListener('click',function(){
+  shuffleOn=!shuffleOn; this.style.color=shuffleOn?'var(--gold)':'var(--arc-dim)';
+});
+
+audio.addEventListener('timeupdate',()=>{
+  if(!audio.duration)return;
+  const pct=(audio.currentTime/audio.duration)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('currentTime').textContent=fmtTime(audio.currentTime);
+  document.getElementById('totalTime').textContent=fmtTime(audio.duration);
+});
+audio.addEventListener('ended',()=>{
+  const next=shuffleOn?Math.floor(Math.random()*tracks.length):(currentTrack+1)%tracks.length;
+  if(!shuffleOn&&next===0&&tracks.length>1){isPlaying=false;document.getElementById('playPauseBtn').textContent='▶';return;}
+  loadTrack(next);
+});
+document.getElementById('progressBar').addEventListener('click',e=>{
+  const rect=e.currentTarget.getBoundingClientRect();
+  audio.currentTime=((e.clientX-rect.left)/rect.width)*audio.duration;
+});
+
+function fmtTime(s){
+  if(isNaN(s))return'0:00';
+  return Math.floor(s/60)+':'+(Math.floor(s%60)+'').padStart(2,'0');
+}
+
+// ===== VOICE RECORDER =====
+let mediaRecorder=null, recChunks=[], recInterval=null, recSeconds=0, recordings=[];
+
+document.getElementById('recStartBtn').addEventListener('click',async()=>{
+  try {
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder=new MediaRecorder(stream); recChunks=[];
+    mediaRecorder.ondataavailable=e=>recChunks.push(e.data);
+    mediaRecorder.onstop=()=>{
+      const blob=new Blob(recChunks,{type:'audio/webm'});
+      const url=URL.createObjectURL(blob);
+      const name='Recording '+(recordings.length+1)+' — '+new Date().toLocaleTimeString();
+      recordings.push({name,url}); renderRecList();
+      stream.getTracks().forEach(t=>t.stop());
+    };
+    mediaRecorder.start(); recSeconds=0;
+    document.getElementById('recTimer').classList.add('recording');
+    document.getElementById('recStartBtn').disabled=true;
+    document.getElementById('recStopBtn').disabled=false;
+    recInterval=setInterval(()=>{ recSeconds++; document.getElementById('recTimer').textContent=fmtTime(recSeconds); },1000);
+  } catch(e){alert('Microphone access denied or not available.');}
+});
+document.getElementById('recStopBtn').addEventListener('click',()=>{
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  clearInterval(recInterval); document.getElementById('recTimer').classList.remove('recording');
+  document.getElementById('recStartBtn').disabled=false; document.getElementById('recStopBtn').disabled=true;
+});
+
+function renderRecList() {
+  const list=document.getElementById('recList'); list.innerHTML='';
+  if(recordings.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">🎙️</div>No recordings yet</div>'; return;}
+  recordings.forEach((r,i)=>{
+    const div=document.createElement('div'); div.className='track-item';
+    div.innerHTML=`<div class="track-num">🎙</div>
+      <div class="track-name">${escHtml(r.name)}</div>
+      <a href="${r.url}" download="${r.name}.webm" style="color:var(--arc);font-size:0.8rem;text-decoration:none;" onclick="event.stopPropagation()">⬇</a>
+      <button class="track-delete-btn" onclick="recordings.splice(${i},1);renderRecList();event.stopPropagation()">✕</button>`;
+    div.addEventListener('click',()=>{audio.src=r.url; audio.play();});
+    list.appendChild(div);
+  });
+}
+
+// ===== WEATHER =====
+let weatherLoaded = false;
+function loadWeather() {
+  if(weatherLoaded) return;
+  if(navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos=>{
+      fetchWeather(pos.coords.latitude, pos.coords.longitude);
+    }, ()=>fetchWeatherByCity('Pune'));
+  } else fetchWeatherByCity('Pune');
+}
+
+async function fetchWeather(lat,lon) {
+  try {
+    const res = await fetch(`https://wttr.in/${lat},${lon}?format=j1`);
+    const data = await res.json();
+    renderWeather(data);
+    weatherLoaded = true;
+  } catch(e) { document.getElementById('weatherContent').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div>Could not load weather</div>'; }
+}
+
+async function fetchWeatherByCity(city) {
+  try {
+    const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+    const data = await res.json();
+    renderWeather(data); weatherLoaded=true;
+  } catch(e) { document.getElementById('weatherContent').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div>Could not load weather</div>'; }
+}
+
+function renderWeather(data) {
+  const cur = data.current_condition[0];
+  const area = data.nearest_area[0];
+  const city = area.areaName[0].value + ', ' + area.country[0].value;
+  const temp = cur.temp_C + '°C';
+  const desc = cur.weatherDesc[0].value;
+  const humidity = cur.humidity + '%';
+  const wind = cur.windspeedKmph + ' km/h';
+  const feels = cur.FeelsLikeC + '°C';
+  const visibility = cur.visibility + ' km';
+  const weatherCode = parseInt(cur.weatherCode);
+  const icon = getWeatherIcon(weatherCode, desc);
+
+  const forecasts = data.weather.map(day => {
+    const date = new Date(day.date);
+    const dayName = date.toLocaleDateString('en',{weekday:'short'});
+    const maxT = day.maxtempC + '°';
+    const minT = day.mintempC + '°';
+    const dayDesc = day.hourly[4]?.weatherDesc[0]?.value || '';
+    const dayIcon = getWeatherIcon(parseInt(day.hourly[4]?.weatherCode||'113'), dayDesc);
+    return `<div class="forecast-item">
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-icon">${dayIcon}</div>
+      <div class="forecast-desc">${dayDesc}</div>
+      <div class="forecast-temp">${maxT} / ${minT}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('weatherContent').innerHTML = `
+    <div class="weather-main">
+      <div class="weather-city">📍 ${city}</div>
+      <div class="weather-icon">${icon}</div>
+      <div class="weather-temp">${temp}</div>
+      <div class="weather-desc">${desc}</div>
+    </div>
+    <div class="weather-grid">
+      <div class="weather-stat"><div class="weather-stat-label">HUMIDITY</div><div class="weather-stat-value">${humidity}</div></div>
+      <div class="weather-stat"><div class="weather-stat-label">WIND</div><div class="weather-stat-value">${wind}</div></div>
+      <div class="weather-stat"><div class="weather-stat-label">FEELS LIKE</div><div class="weather-stat-value">${feels}</div></div>
+      <div class="weather-stat"><div class="weather-stat-label">VISIBILITY</div><div class="weather-stat-value">${visibility}</div></div>
+    </div>
+    <div class="section-title" style="margin-top:4px">3-DAY FORECAST</div>
+    <div class="forecast-list">${forecasts}</div>
+  `;
+}
+
+function getWeatherIcon(code, desc) {
+  const d = desc.toLowerCase();
+  if(d.includes('thunder')) return '⛈️';
+  if(d.includes('snow') || d.includes('blizzard')) return '🌨️';
+  if(d.includes('heavy rain') || d.includes('torrential')) return '🌧️';
+  if(d.includes('drizzle') || d.includes('light rain')) return '🌦️';
+  if(d.includes('rain') || d.includes('shower')) return '🌧️';
+  if(d.includes('fog') || d.includes('mist') || d.includes('haze')) return '🌫️';
+  if(d.includes('overcast') || d.includes('cloudy')) return '☁️';
+  if(d.includes('partly cloudy')) return '⛅';
+  if(d.includes('clear') || d.includes('sunny')) return '☀️';
+  return '🌡️';
+}
+</script>
+</body>
+</html>
